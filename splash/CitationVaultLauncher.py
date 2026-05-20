@@ -1,6 +1,6 @@
 """
 CitationVault splash screen launcher.
-Shows a branded Maridizzle splash for ~2.5 s then launches the bundled
+Shows a branded Maridizzle splash, then launches the bundled
 CitationVault.exe. Designed to be compiled with PyInstaller --add-binary
 to embed the real app inside this single exe.
 
@@ -13,11 +13,10 @@ import sys
 import shutil
 import subprocess
 import tempfile
-import threading
 import tkinter as tk
 
 
-SPLASH_DURATION_MS = 2500
+SPLASH_DURATION_MS = 4000
 EXE_NAME = "CitationVault.exe"
 
 BG_COLOR = "#0d1117"
@@ -101,9 +100,24 @@ def build_splash(root):
     bar.pack(side=tk.BOTTOM, fill=tk.X)
 
 
+def keep_on_top(root):
+    try:
+        root.lift()
+        root.attributes("-topmost", True)
+    except tk.TclError:
+        return
+    root.after(200, lambda: keep_on_top(root))
+
+
 def main():
     root = tk.Tk()
     build_splash(root)
+
+    root.update_idletasks()
+    root.wait_visibility(root)
+    root.update()
+
+    keep_on_top(root)
 
     def finish():
         try:
