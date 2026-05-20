@@ -1,21 +1,22 @@
 """
-CitationVault splash screen launcher.
-Shows a branded splash for ~2.5 s then launches CitationVault.exe
-from the same directory.
+CitationVault — splash screen + bundled app launcher.
 
-Build (on Windows, with PyInstaller installed):
-    pyinstaller CitationVaultLauncher.spec
+When compiled with --add-binary, CitationVault.exe is embedded inside this
+executable. On first run it copies the real app to LOCALAPPDATA so it
+survives the PyInstaller temp-folder cleanup, then launches it detached.
 """
 
 import os
 import sys
+import shutil
 import subprocess
 import threading
 import tkinter as tk
 
 
 SPLASH_DURATION_MS = 2500
-EXE_NAME = "CitationVault.exe"
+REAL_EXE_NAME = "CitationVault_real.exe"
+APP_DIR_NAME = "CitationVault"
 
 BG_COLOR = "#0d1117"
 ACCENT_COLOR = "#58a6ff"
@@ -23,15 +24,24 @@ TEXT_COLOR = "#e6edf3"
 SUB_COLOR = "#8b949e"
 
 
-def get_exe_dir():
+def get_stable_app_path():
+    """Copy the embedded exe to LOCALAPPDATA on first run; return its path."""
+    local = os.environ.get("LOCALAPPDATA", os.path.expanduser("~"))
+    target_dir = os.path.join(local, APP_DIR_NAME)
+    target = os.path.join(target_dir, REAL_EXE_NAME)
+
     if getattr(sys, "frozen", False):
-        return os.path.dirname(sys.executable)
-    return os.path.dirname(os.path.abspath(__file__))
+        source = os.path.join(sys._MEIPASS, REAL_EXE_NAME)
+        os.makedirs(target_dir, exist_ok=True)
+        if not os.path.exists(target) or os.path.getsize(target) != os.path.getsize(source):
+            shutil.copy2(source, target)
+
+    return target
 
 
 def launch_app():
-    exe_path = os.path.join(get_exe_dir(), EXE_NAME)
-    subprocess.Popen([exe_path], creationflags=subprocess.DETACHED_PROCESS)
+    app_path = get_stable_app_path()
+    subprocess.Popen([app_path], creationflags=subprocess.DETACHED_PROCESS)
 
 
 def build_splash(root):
@@ -46,7 +56,6 @@ def build_splash(root):
     y = (sh - height) // 2
     root.geometry(f"{width}x{height}+{x}+{y}")
 
-    # Outer border frame
     border = tk.Frame(root, bg=ACCENT_COLOR, bd=0)
     border.place(x=0, y=0, width=width, height=height)
 
@@ -77,7 +86,6 @@ def build_splash(root):
         bg=BG_COLOR,
     ).pack(pady=(32, 0))
 
-    # Thin accent bar at the bottom
     bar = tk.Frame(inner, bg=ACCENT_COLOR, height=3)
     bar.pack(side=tk.BOTTOM, fill=tk.X)
 
@@ -86,7 +94,6 @@ def main():
     root = tk.Tk()
     build_splash(root)
 
-    # Launch the real app after the splash has been visible
     def close_and_launch():
         root.after(SPLASH_DURATION_MS, lambda: (launch_app(), root.destroy()))
 
