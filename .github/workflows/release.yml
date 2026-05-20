@@ -13,6 +13,8 @@ jobs:
     runs-on: windows-latest
     permissions:
       contents: write
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
     steps:
       - uses: actions/checkout@v4
@@ -27,11 +29,10 @@ jobs:
 
       - name: Build splash launcher
         working-directory: splash
-        run: pyinstaller CitationVaultLauncher.spec
+        run: pyinstaller --onefile --windowed --collect-all tkinter --name CitationVaultLauncher CitationVaultLauncher.py
 
       - name: Stage launcher exe
-        run: copy splash\dist\CitationVaultLauncher.exe CitationVaultLauncher.exe
-        shell: cmd
+        run: Copy-Item splash\dist\CitationVaultLauncher.exe CitationVaultLauncher.exe
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
