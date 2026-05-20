@@ -1,0 +1,60 @@
+name: Build & Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+
+      - name: Build splash launcher
+        working-directory: splash
+        run: pyinstaller CitationVaultLauncher.spec
+
+      - name: Stage launcher exe
+        run: copy splash\dist\CitationVaultLauncher.exe CitationVaultLauncher.exe
+        shell: cmd
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag }}
+          name: "CitationVault ${{ github.event.inputs.tag }} by Maridizzle"
+          body: |
+            ## CitationVault ${{ github.event.inputs.tag }}
+
+            Made by **Maridizzle**
+
+            ### Downloads
+
+            | File | Description |
+            |------|-------------|
+            | `CitationVault.exe` | The main app — double-click to run, no install needed |
+            | `CitationVaultLauncher.exe` | Optional launcher — shows the Maridizzle splash screen before opening the app |
+
+            ### How to use the splash launcher
+            Place both files in the same folder. Run `CitationVaultLauncher.exe` instead of
+            `CitationVault.exe` to see the branded loading screen.
+          files: |
+            CitationVault.exe
+            CitationVaultLauncher.exe
+          draft: false
+          prerelease: false
