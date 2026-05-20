@@ -27,7 +27,7 @@ jobs:
 
       - name: Build splash launcher
         working-directory: splash
-        run: pyinstaller CitationVaultLauncher.spec
+        run: pyinstaller --onefile --windowed --name CitationVaultLauncher CitationVaultLauncher.py
 
       - name: Stage launcher exe
         run: copy splash\dist\CitationVaultLauncher.exe CitationVaultLauncher.exe
