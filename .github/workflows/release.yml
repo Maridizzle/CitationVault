@@ -1,0 +1,39 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: "CitationVault ${{ github.event.inputs.tag || github.ref_name }} by Maridizzle"
+          body: |
+            ## CitationVault ${{ github.event.inputs.tag || github.ref_name }}
+
+            Made by **Maridizzle**
+
+            ### Download
+            Download `CitationVault.exe` below and double-click to run — no installation needed.
+
+            ### Optional: Splash Screen Launcher
+            Build `CitationVaultLauncher.exe` from the `splash/` folder (see README) for a
+            branded loading screen before the app opens.
+          draft: false
+          prerelease: false
