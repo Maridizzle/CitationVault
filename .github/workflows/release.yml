@@ -29,12 +29,10 @@ jobs:
 
       - name: Build single-file CitationVault.exe (splash + bundled app)
         working-directory: splash
-        run: >
-          pyinstaller --onefile --windowed
-          --collect-all tkinter
-          --add-binary "..\CitationVault.exe;."
-          --name CitationVault
-          CitationVaultLauncher.py
+        run: pyinstaller --onefile --windowed --collect-all tkinter --add-binary "..\CitationVault.exe;." --name CitationVault CitationVaultLauncher.py
+
+      - name: Stage release artifact
+        run: Copy-Item splash\dist\CitationVault.exe CitationVault-release.exe
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -47,10 +45,11 @@ jobs:
             Made by **Maridizzle**
 
             ### Download
-
-            **[CitationVault.exe]** — download and double-click. No install needed.
-
-            The app opens with a Maridizzle splash screen, then launches automatically.
-          files: splash/dist/CitationVault.exe
+            Download `CitationVault.exe` below and double-click to run.
+            A Maridizzle splash screen will appear, then the app opens.
+            No installation required.
+          files: |
+            CitationVault-release.exe
+          fail_on_unmatched_files: true
           draft: false
           prerelease: false

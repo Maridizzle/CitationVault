@@ -8,19 +8,18 @@ Made by **Maridizzle**
 
 ## Download
 
-Head to the [**Releases**](../../releases) page and grab `CitationVault.exe`.
+Head to the [**Releases**](../../releases) page and grab the latest `CitationVault.exe`.
 
-No installation required — just download and double-click.
-
-The app opens with a **Maridizzle** splash screen, then launches automatically.
+Double-click to run — the Maridizzle splash screen appears, then the app opens. No installation needed.
 
 ---
 
 ## Features
 
+- Branded Maridizzle splash screen on launch
 - Store and search citations quickly
 - Organize references by project or category
-- Lightweight Windows executable — no install needed
+- Lightweight single-file Windows executable — no install needed
 
 ---
 

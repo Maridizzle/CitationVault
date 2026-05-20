@@ -1,22 +1,24 @@
 """
-CitationVault — splash screen + bundled app launcher.
+CitationVault splash screen launcher.
+Shows a branded Maridizzle splash for ~2.5 s then launches the bundled
+CitationVault.exe. Designed to be compiled with PyInstaller --add-binary
+to embed the real app inside this single exe.
 
-When compiled with --add-binary, CitationVault.exe is embedded inside this
-executable. On first run it copies the real app to LOCALAPPDATA so it
-survives the PyInstaller temp-folder cleanup, then launches it detached.
+On first run, the embedded app is copied to %LOCALAPPDATA%\\CitationVault\\
+so it survives PyInstaller's temp-folder cleanup when the launcher exits.
 """
 
 import os
 import sys
 import shutil
 import subprocess
+import tempfile
 import threading
 import tkinter as tk
 
 
 SPLASH_DURATION_MS = 2500
-REAL_EXE_NAME = "CitationVault_real.exe"
-APP_DIR_NAME = "CitationVault"
+EXE_NAME = "CitationVault.exe"
 
 BG_COLOR = "#0d1117"
 ACCENT_COLOR = "#58a6ff"
@@ -24,24 +26,33 @@ TEXT_COLOR = "#e6edf3"
 SUB_COLOR = "#8b949e"
 
 
-def get_stable_app_path():
-    """Copy the embedded exe to LOCALAPPDATA on first run; return its path."""
-    local = os.environ.get("LOCALAPPDATA", os.path.expanduser("~"))
-    target_dir = os.path.join(local, APP_DIR_NAME)
-    target = os.path.join(target_dir, REAL_EXE_NAME)
-
+def resolve_app_path():
     if getattr(sys, "frozen", False):
-        source = os.path.join(sys._MEIPASS, REAL_EXE_NAME)
+        bundled = os.path.join(sys._MEIPASS, EXE_NAME)
+        target_dir = os.path.join(
+            os.environ.get("LOCALAPPDATA", tempfile.gettempdir()),
+            "CitationVault",
+        )
         os.makedirs(target_dir, exist_ok=True)
-        if not os.path.exists(target) or os.path.getsize(target) != os.path.getsize(source):
-            shutil.copy2(source, target)
+        target = os.path.join(target_dir, EXE_NAME)
 
-    return target
+        needs_copy = (
+            not os.path.exists(target)
+            or os.path.getsize(target) != os.path.getsize(bundled)
+        )
+        if needs_copy:
+            shutil.copy2(bundled, target)
+        return target
+
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), EXE_NAME)
 
 
 def launch_app():
-    app_path = get_stable_app_path()
-    subprocess.Popen([app_path], creationflags=subprocess.DETACHED_PROCESS)
+    app_path = resolve_app_path()
+    flags = 0
+    if hasattr(subprocess, "DETACHED_PROCESS"):
+        flags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
+    subprocess.Popen([app_path], creationflags=flags, close_fds=True)
 
 
 def build_splash(root):
@@ -94,10 +105,13 @@ def main():
     root = tk.Tk()
     build_splash(root)
 
-    def close_and_launch():
-        root.after(SPLASH_DURATION_MS, lambda: (launch_app(), root.destroy()))
+    def finish():
+        try:
+            launch_app()
+        finally:
+            root.destroy()
 
-    threading.Thread(target=close_and_launch, daemon=True).start()
+    root.after(SPLASH_DURATION_MS, finish)
     root.mainloop()
 
 
