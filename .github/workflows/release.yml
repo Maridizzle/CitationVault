@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag (e.g. v1.0.0)'
+        description: 'Release tag (e.g. v1.0.2)'
         required: true
-        default: 'v1.0.0'
+        default: 'v1.0.2'
 
 jobs:
   build-and-release:
@@ -27,12 +27,14 @@ jobs:
       - name: Install PyInstaller
         run: pip install pyinstaller
 
-      - name: Build splash launcher
+      - name: Build single-file CitationVault.exe (splash + bundled app)
         working-directory: splash
-        run: pyinstaller --onefile --windowed --collect-all tkinter --name CitationVaultLauncher CitationVaultLauncher.py
-
-      - name: Stage launcher exe
-        run: Copy-Item splash\dist\CitationVaultLauncher.exe CitationVaultLauncher.exe
+        run: >
+          pyinstaller --onefile --windowed
+          --collect-all tkinter
+          --add-binary "..\CitationVault.exe;."
+          --name CitationVault
+          CitationVaultLauncher.py
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -44,18 +46,11 @@ jobs:
 
             Made by **Maridizzle**
 
-            ### Downloads
+            ### Download
 
-            | File | Description |
-            |------|-------------|
-            | `CitationVault.exe` | The main app — double-click to run, no install needed |
-            | `CitationVaultLauncher.exe` | Optional launcher — shows the Maridizzle splash screen before opening the app |
+            **[CitationVault.exe]** — download and double-click. No install needed.
 
-            ### How to use the splash launcher
-            Place both files in the same folder. Run `CitationVaultLauncher.exe` instead of
-            `CitationVault.exe` to see the branded loading screen.
-          files: |
-            CitationVault.exe
-            CitationVaultLauncher.exe
+            The app opens with a Maridizzle splash screen, then launches automatically.
+          files: splash/dist/CitationVault.exe
           draft: false
           prerelease: false
