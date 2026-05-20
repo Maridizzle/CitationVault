@@ -1,8 +1,5 @@
 # PyInstaller 6.x spec for CitationVaultLauncher
 # Run on Windows:  pyinstaller CitationVaultLauncher.spec
-#
-# Place CitationVault.exe in the same output folder as the compiled launcher,
-# or adjust the `binaries` list below to bundle it inside the single file.
 
 a = Analysis(
     ['CitationVaultLauncher.py'],
